@@ -23,10 +23,7 @@ bot.onText(/\/start/, (msg) => {
 });
 
 bot.on("message", (msg) => {
-    if (msg.text === "movie") {
-        bot.sendDocument(
-            msg.chat.id,
-            "https://sample-videos.com"
-        );
+    if (msg.text && msg.text.toLowerCase() === "movie") {
+        bot.sendMessage(msg.chat.id, "আপনার মুভি বটটি সফলভাবে কাজ করছে! আপনি কোন মুভিটি দেখতে চান?");
     }
 });
