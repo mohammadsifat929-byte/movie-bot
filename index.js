@@ -69,7 +69,7 @@ bot.on("message", async (msg) => {
 
     // 🎬 মুভি ১: দাগী (Dagi Movie)
     if (textInput.includes("/start dagi_movie")) {
-        const fileId = "এখানে_দাগী_মুভির_File_ID_বসাবেন"; 
+        const fileId = "BAACAgUAAyEFAATqd-Z4AAMLahvmvOG8ZhCPFEDTDNJI6OubppEAArYeAAI21-FUN_FVKTiYzkM7BA"; 
         bot.sendMessage(chatId, "⏳ 'দাগী' মুভিটি সরাসরি বটের ভেতর লোড হচ্ছে, দয়া করে কয়েক সেকেন্ড অপেক্ষা করুন...");
         bot.sendVideo(chatId, fileId, { caption: "🎬 **দাগী (Dagi) Full Movie**\n\nএখানেই প্লে করে দেখতে পারেন! 🎉" }).catch(err => console.log(err));
     } 
