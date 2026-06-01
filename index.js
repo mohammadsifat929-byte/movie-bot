@@ -112,15 +112,30 @@ bot.on("message", async (msg) => {
     const userId = msg.from.id;
     const textInput = msg.text;
 
-    // চ্যানেল সাবস্ক্রিপশন চেক করা
-    const isSubscribed = await checkSubscription(userId);
-    if (!isSubscribed) {
-        const cleanChannel = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : '';
-        return bot.sendMessage(chatId, `⚠️ মুভিটি সরাসরি ডাউনলোড করার আগে অবশ্যই আমাদের অফিশিয়াল চ্যানেলে জয়েন করতে হবে।`, {
-            reply_markup: {
-                inline_keyboard: [[{ text: "📢 Join Channel", url: `https://t.me{cleanChannel}` }]]
-            }
-        });
+        // চ্যানেল সাবস্ক্রিপশন চেক করা এবং জয়েন করার মেসেজ দেওয়া
+    try {
+        const isSubscribed = await checkSubscription(userId);
+        
+        if (!isSubscribed) {
+            const cleanChannel = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : 'MobileInsight001';
+            
+            return await bot.sendMessage(chatId, `⚠️ **দুঃখিত! মুভিটি ডাউনলোড করার আগে আপনাকে আমাদের অফিশিয়াল চ্যানেলে জয়েন করতে হবে।**\n\nনিচের বাটনে ক্লিক করে চ্যানেলে জয়েন করুন এবং আবার ট্রাই করুন।`, {
+                parse_mode: "Markdown",
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            { 
+                                text: "📢 Join Our Channel", 
+                                url: `https://t.me{cleanChannel}` 
+                            }
+                        ]
+                    ]
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Subscription Check Error:", error.message);
+        // কোনো কারণে সাবস্ক্রিপশন চেক ফেইল করলে বট যেন ক্র্যাশ না করে ফ্রন্টএন্ডে মেসেজ পাঠায়
     }
 
     // ইউনিক কোড চেক করা (যেমন: /start BAAChg...)
