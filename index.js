@@ -168,17 +168,17 @@ bot.on("message", async (msg) => {
     }
 });
 
-// 🛠️ ৮. বটের ইনপুট বক্সে স্থায়ী "Visit Web" মেনু বাটন সেটআপ (আপনার ব্লগের সাথে লিংক করা)
+// ৭. সাইটের মেনু বাটন সেট করা
 bot.setChatMenuButton({
     menu_button: JSON.stringify({
-        type: "web_app",
-        text: "🌐 Visit Web",
+        type: 'web_app',
+        text: 'Visit Web',
         web_app: { url: WEBSITE_URL }
     })
-}).then(() => {
+})
+.then(() => {
     console.log("Menu Button configured successfully!");
-}).catch((err) => {
+})
+.catch((err) => {
     console.log("Menu Button Error: ", err);
 });
-
-             
