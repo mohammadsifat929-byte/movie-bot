@@ -88,7 +88,7 @@ async function handleAdminFile(msg, fileId) {
             const botInfo = await bot.getMe();
             const botUsername = botInfo.username;
             const shortCode = encodeFileId(fileId);
-            const finalLink = `https://t.me{botUsername}?start=${shortCode}`;
+            const finalLink = `https://t.me{@Mobileinsight0Bot}?start=${shortCode}`;
             
             const responseText = `🔗 *আপনার ওয়েবসাইটের জন্য লিংক তৈরি রেডি!*\n\n` +
                                  `এই লিংকটি kopi করে আপনার ওয়েবসাইটের ডাউনলোড বাটনে বসিয়ে দিন:\n\n` +
