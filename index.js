@@ -103,7 +103,7 @@ async function handleAdminFile(msg, fileId) {
 bot.on("video", (msg) => handleAdminFile(msg, msg.video.file_id));
 bot.on("document", (msg) => handleAdminFile(msg, msg.document.file_id));
 
-// ৫. ইউজার মেসেজ হ্যান্ডল করার প্রধান ফাংশন
+/// ৫. ইউজার মেসেজ হ্যান্ডল করার প্রধান লজিক
 bot.on("message", async (msg) => {
     if (msg.video || msg.document) return;
     if (!msg.text) return;
@@ -112,7 +112,7 @@ bot.on("message", async (msg) => {
     const userId = msg.from.id;
     const textInput = msg.text;
 
-        // চ্যানেল     // চ্যানেল সাবস্ক্রিপশন চেক করা এবং জয়েন করার নোটিশ দেওয়া
+    // চ্যানেল সাবস্ক্রিপশন চেক এবং জয়েন করার নোটিশ দেওয়া
     try {
         const isSubscribed = await checkSubscription(userId);
         
@@ -137,30 +137,17 @@ bot.on("message", async (msg) => {
         console.error("Subscription Check Error:", error.message);
     }
 
-                            { 
-                                text: "📢 Join Our Channel", 
-                                url: `https://t.me{cleanChannel}` 
-                            }
-                        ]
-                    ]
-                }
-            });
-        }
-    } catch (error) {
-        console.error("Subscription Check Error:", error.message);
-        // কোনো কারণে সাবস্ক্রিপশন চেক ফেইল করলে বট যেন ক্র্যাশ না করে ফ্রন্টএন্ডে মেসেজ পাঠায়
-    }
-
-    // ইউনিক কোড চেক করা (যেমন: /start BAAChg...)
+    // ইউজার জয়েন থাকলে নিচের লজিকগুলো কাজ করবে
     if (textInput.startsWith('/start') && textInput.split(' ').length > 1) {
-        const shortCode = textInput.split(' ')[1];
+        const parts = textInput.split(' ');
+        const shortCode = parts[1];
         const originalFileId = decodeFileId(shortCode);
 
-        if (originalFileId && originalFileId.startsWith('BAAChg')) {
+        if (originalFileId) {
             const loadingMsg = await bot.sendMessage(chatId, "⏳ আপনার ফাইলটি প্রসেস করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।");
             try {
                 await bot.sendVideo(chatId, originalFileId, {
-                    caption: `✨ আপনার অনুরোধ করা ভিডিও ফাইলটি রেডি!\n\n🌐 আমাদের ওয়েবসাইট: [${WEBSITE_NAME}](${WEBSITE_URL})`,
+                    caption: `✨ আপনার অনুরোধ করা ফাইলটি রেডি!\n\n🌐 আমাদের ওয়েবসাইট: [${WEBSITE_NAME}](${WEBSITE_URL})`,
                     parse_mode: "Markdown"
                 });
                 await bot.deleteMessage(chatId, loadingMsg.message_id);
@@ -171,18 +158,16 @@ bot.on("message", async (msg) => {
             await bot.sendMessage(chatId, "❌ দুঃখিত, এই লিংকটি সঠিক নয়।", { parse_mode: "Markdown" });
         }
     } 
-    // সাধারণ /start কমান্ড হ্যান্ডেল করা
     else if (textInput === '/start') {
-        await bot.sendMessage(chatId, `👋 হ্যালো ${msg.from.first_name || 'ইউজার'}! [${WEBSITE_NAME}](${WEBSITE_URL}) এর অফিশিয়াল বটে আপনাকে স্বাগতম।`, {
+        await bot.sendMessage(chatId, `👋 হ্যালো ${msg.from.first_name || 'ইউজার'}! [${WEBSITE_NAME}](${WEBSITE_URL}) এর অফিশিয়াল বটে আপনাকে স্বাগত।`, {
             parse_mode: "Markdown",
             reply_markup: {
                 inline_keyboard: [[{ text: "🌐 Visit Website", url: WEBSITE_URL }]]
             }
         });
     } 
-    // মেনু কমান্ড হ্যান্ডেল করা
     else if (textInput === '/menu') {
-        const cleanChannelMenu = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : '';
+        const cleanChannelMenu = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : 'MobileInsight001';
         await bot.sendMessage(chatId, `📋 মেনু অপশনসমূহ:\n\nনিচের বাটনগুলো ব্যবহার করে আপনার প্রয়োজনীয় অপশনটি বেছে নিন।`, {
             parse_mode: "Markdown",
             reply_markup: {
@@ -203,13 +188,9 @@ bot.setChatMenuButton({
         web_app: { url: WEBSITE_URL }
     })
 })
-.then(() => {
-    console.log("Menu Button configured successfully!");
-})
-.catch((err) => {
-    console.log("Menu Button Error: ", err);
-});
+.then(() => console.log("Menu Button configured successfully!"))
+.catch((err) => console.log("Menu Button Error: ", err));
 
-// পোলিং এবং সাধারণ এরর হ্যান্ডলিং যোগ করা (যা ক্র্যাশ হওয়া আটকাবে)
+// ৭. গ্লোবাল এরর হ্যান্ডলিং (বট ক্র্যাশ হওয়া আটকাবে)
 bot.on("polling_error", (err) => console.log("Polling error:", err.message));
 bot.on("error", (err) => console.log("General error:", err.message));
