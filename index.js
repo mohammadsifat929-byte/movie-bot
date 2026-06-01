@@ -2,19 +2,19 @@ const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
 
 // ১. কনফিগারেশন এবং টোকেন সেটআপ
-const token = process.env.BOT_TOKEN; // রেন্ডারের Env-এ BOT_TOKEN সেট করা থাকতে হবে
+const token = process.env.BOT_TOKEN;
 const bot = new TelegramBot(token, { polling: true });
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ২. আপনার টেলিগ্রাম চ্যানেল ও অফিশিয়াল তথ্য
+// ২. অফিশিয়াল ইনফো (এখানে আপনার আসল ব্লগ লিংক যুক্ত করা হয়েছে)
 const CHANNEL_ID = "@Mobileinsight001";
 const ADMIN_ID = 8695023288; // ⚠️ এখানে আপনার আসল টেলিগ্রাম ইউজার আইডি বসান
-const WEBSITE_NAME = "🍿 MobileInsight Web";
-const WEBSITE_URL = "https://onrender.com"; // আপনার রেন্ডার ওয়েবসাইটের লিংক
+const WEBSITE_NAME = "🍿 ST Flix Web";
+const WEBSITE_URL = "https://stfix.blogspot.com"; 
 
-// ৩. রেন্ডার সার্ভারের হোমপেজ ডিজাইন (প্রিমিয়াম ডার্ক মুভি থিম)
+// ৩. রেন্ডার ব্যাকএন্ড ড্যাশবোর্ড ডিজাইন
 app.get("/", (req, res) => {
     res.send(`
     <!DOCTYPE html>
@@ -42,7 +42,7 @@ app.get("/", (req, res) => {
     <body>
         <div class="container">
             <div class="logo">🍿</div>
-            <h1>MobileInsight Bot</h1>
+            <h1>ST Flix Server</h1>
             <p>আপনার প্রিয় মুভি ও ভিডিও ফাইল সরাসরি টেলিগ্রামে পাওয়ার সবচেয়ে দ্রুত এবং প্রিমিয়াম প্ল্যাটফর্ম।</p>
             <div class="status-tag"><div class="status-dot"></div>ST Flix Multi-Movie Backend Active</div>
             <a href="https://t.me" class="btn" target="_blank">🤖 ওপেন টেলিগ্রাম বট</a>
@@ -81,7 +81,7 @@ function decodeFileId(shortCode) {
     }
 }
 
-// 🎯 ৬. অ্যাডমিন ভিডিও দিলে বট অটোমেটিক নিজের ইউজারনেমসহ শর্ট লিংক বানিয়ে দেবে
+// 🎯 ৬. অ্যাডমিন ভিডিও দিলে বট অটোমেটিক নিজের আসল ইউজারনেম বসিয়ে শর্ট লিংক তৈরি করবে
 async function handleAdminFile(msg, fileId) {
     if (msg.from.id === ADMIN_ID) {
         try {
@@ -91,7 +91,7 @@ async function handleAdminFile(msg, fileId) {
             const finalLink = `https://t.me{botUsername}?start=${shortCode}`;
             
             const responseText = `🔗 *আপনার ওয়েবসাইটের জন্য লিংক তৈরি রেডি!*\n\n` +
-                                 `এই লিংকটি কপি করে আপনার ওয়েবসাইটের ডাউনলোড বাটনে বসিয়ে দিন:\n\n` +
+                                 `এই লিংকটি kopi করে আপনার ওয়েবসাইটের ডাউনলোড বাটনে বসিয়ে দিন:\n\n` +
                                  `\`${finalLink}\``;
                                  
             bot.sendMessage(msg.chat.id, responseText, { parse_mode: "Markdown" });
@@ -168,7 +168,7 @@ bot.on("message", async (msg) => {
     }
 });
 
-// 🛠️ ৮. বটের ইনপুট বক্সে স্থায়ী "Visit Web" মেনু বাটন সেটআপ
+// 🛠️ ৮. বটের ইনপুট বক্সে স্থায়ী "Visit Web" মেনু বাটন সেটআপ (আপনার ব্লগের সাথে লিংক করা)
 bot.setChatMenuButton({
     menu_button: JSON.stringify({
         type: "web_app",
@@ -180,4 +180,5 @@ bot.setChatMenuButton({
 }).catch((err) => {
     console.log("Menu Button Error: ", err);
 });
+
              
