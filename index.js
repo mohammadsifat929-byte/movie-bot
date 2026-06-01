@@ -103,7 +103,7 @@ async function handleAdminFile(msg, fileId) {
 bot.on("video", (msg) => handleAdminFile(msg, msg.video.file_id));
 bot.on("document", (msg) => handleAdminFile(msg, msg.document.file_id));
 
-/// ৫. ইউজার মেসেজ হ্যান্ডল করার প্রধান লজিক
+// ৫. ইউজার মেসেজ হ্যান্ডল করার প্রধান লজিক
 bot.on("message", async (msg) => {
     if (msg.video || msg.document) return;
     if (!msg.text) return;
@@ -112,14 +112,16 @@ bot.on("message", async (msg) => {
     const userId = msg.from.id;
     const textInput = msg.text;
 
-    // চ্যানেল সাবস্ক্রিপশন চেক এবং জয়েন করার নোটিশ দেওয়া
+    // 🚨 চ্যানেল সাবস্ক্রিপশন চেক এবং শুধু জয়েন হওয়ার নোটিশ দেওয়া
     try {
         const isSubscribed = await checkSubscription(userId);
         
         if (!isSubscribed) {
+            // CHANNEL_ID থেকে '@' চিহ্নটি কেটে ইউজারনেম তৈরি করা
             const cleanChannel = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : 'MobileInsight001';
             
-            return await bot.sendMessage(chatId, `⚠️ **অনুগ্রহ করে আগে আমাদের পাবলিক চ্যানেলে জয়েন হোন, তারপর বটের কাজ করতে পারবেন।**\n\nনিচের বাটনে চাপ দিয়ে চ্যানেলে জয়েন করে নিন।`, {
+            // ইউজার জয়েন না থাকলে সরাসরি শুধু এই মেসেজটি বাটনসহ যাবে এবং কোড এখানেই থেমে যাবে
+            return await bot.sendMessage(chatId, `⚠️ **অনুগ্রহ করে আগে আমাদের পাবলিক চ্যানেলে জয়েন হোন, তারপর বটের কাজ করতে পারবেন।**`, {
                 parse_mode: "Markdown",
                 reply_markup: {
                     inline_keyboard: [
@@ -137,7 +139,7 @@ bot.on("message", async (msg) => {
         console.error("Subscription Check Error:", error.message);
     }
 
-    // ইউজার জয়েন থাকলে নিচের লজিকগুলো কাজ করবে
+    // ইউজার জয়েন থাকলে কেবল নিচের এই লজিকগুলো কাজ করবে
     if (textInput.startsWith('/start') && textInput.split(' ').length > 1) {
         const parts = textInput.split(' ');
         const shortCode = parts[1];
@@ -186,6 +188,14 @@ bot.setChatMenuButton({
         type: 'web_app',
         text: 'Visit Web',
         web_app: { url: WEBSITE_URL }
+    })
+})
+.then(() => console.log("Menu Button configured successfully!"))
+.catch((err) => console.log("Menu Button Error: ", err));
+
+// ৭. গ্লোবাল এরর হ্যান্ডলিং (বট ক্র্যাশ হওয়া আটকাবে)
+bot.on("polling_error", (err) => console.log("Polling error:", err.message));
+bot.on("error", (err) => console.log("General error:", err.message));
     })
 })
 .then(() => console.log("Menu Button configured successfully!"))
