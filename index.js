@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 // ২. আপনার টেলিগ্রাম চ্যানেল ও অফিশিয়াল তথ্য
 const CHANNEL_ID = "@Mobileinsight001";
-const ADMIN_ID = 578493021; // ⚠️ এখানে আপনার আসল টেলিগ্রাম ইউজার আইডি বসান
+const ADMIN_ID = 8695023288; // ⚠️ এখানে আপনার আসল টেলিগ্রাম ইউজার আইডি বসান
 const WEBSITE_NAME = "🍿 MobileInsight Web";
 const WEBSITE_URL = "https://onrender.com"; // আপনার রেন্ডার ওয়েবসাইটের লিংক
 
@@ -180,7 +180,4 @@ bot.setChatMenuButton({
 }).catch((err) => {
     console.log("Menu Button Error: ", err);
 });
-
-// ৯. বট সচল রাখা
-bot.infinity_polling();
-            
+             
