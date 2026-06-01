@@ -82,21 +82,20 @@ function decodeFileId(shortCode) {
 }
 
 // 🎯 ৬. অ্যাডমিন ভিডিও দিলে বট অটোমেটিক নিজের আসল ইউজারনেম বসিয়ে শর্ট লিংক তৈরি করবে
+// ৪. অ্যাডমিন ভিডিও ও ডকুমেন্ট হ্যান্ডেল করার ফাংশন
 async function handleAdminFile(msg, fileId) {
-    if (msg.from.id === ADMIN_ID) {
+    if (msg.from.id == ADMIN_ID) {
         try {
             const botInfo = await bot.getMe();
             const botUsername = botInfo.username;
             const shortCode = encodeFileId(fileId);
-            const finalLink = `https://t.me{@Mobileinsight0Bot}?start=${shortCode}`;
-            
-            const responseText = `🔗 *আপনার ওয়েবসাইটের জন্য লিংক তৈরি রেডি!*\n\n` +
-                                 `এই লিংকটি kopi করে আপনার ওয়েবসাইটের ডাউনলোড বাটনে বসিয়ে দিন:\n\n` +
-                                 `\`${finalLink}\``;
-                                 
-            bot.sendMessage(msg.chat.id, responseText, { parse_mode: "Markdown" });
+            const finallink = `https://t.me{botUsername}?start=${shortCode}`;
+
+            const responseText = `আপনার ওয়েবসাইটের জন্য লিংক তৈরি আইডি!\n\nনিচের লিংকটি কপি করে আপনার ওয়েবসাইটের বাটনে বসিয়ে দিন:\n\n${finallink}`;
+
+            await bot.sendMessage(msg.chat.id, responseText, { parse_mode: "Markdown" });
         } catch (error) {
-            bot.sendMessage(msg.chat.id, "❌ লিংক তৈরি করতে সমস্যা হয়েছে।");
+            await bot.sendMessage(msg.chat.id, "❌ লিংক তৈরি করতে সমস্যা হয়েছে!");
         }
     }
 }
@@ -104,7 +103,7 @@ async function handleAdminFile(msg, fileId) {
 bot.on("video", (msg) => handleAdminFile(msg, msg.video.file_id));
 bot.on("document", (msg) => handleAdminFile(msg, msg.document.file_id));
 
-// 📥 ৭. মেসেজ এবং স্টার্ট কমান্ড হ্যান্ডলার
+// ৫. ইউজার মেসেজ হ্যান্ডল করার প্রধান ফাংশন
 bot.on("message", async (msg) => {
     if (msg.video || msg.document) return;
     if (!msg.text) return;
@@ -113,62 +112,62 @@ bot.on("message", async (msg) => {
     const userId = msg.from.id;
     const textInput = msg.text;
 
-    // চ্যানেলে জয়েন করা আছে কিনা চেক
+    // চ্যানেল সাবস্ক্রিপশন চেক করা
     const isSubscribed = await checkSubscription(userId);
     if (!isSubscribed) {
-        return bot.sendMessage(chatId, "⚠️ *মুভিটি সরাসরি বটের ভেতর পেতে হলে আপনাকে আমাদের অফিশিয়াল চ্যানেলে জয়েন করতে হবে।*", {
+        const cleanChannel = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : '';
+        return bot.sendMessage(chatId, `⚠️ মুভিটি সরাসরি ডাউনলোড করার আগে অবশ্যই আমাদের অফিশিয়াল চ্যানেলে জয়েন করতে হবে।`, {
             reply_markup: {
-                inline_keyboard: [[{ text: "📢 Join Channel", url: `https://t.me{CHANNEL_ID.replace('@', '')}` }]]
+                inline_keyboard: [[{ text: "📢 Join Channel", url: `https://t.me{cleanChannel}` }]]
             }
         });
     }
 
-    // ইউজার যদি ওয়েবসাইট বা শর্ট লিংক থেকে আসে
-    if (textInput.startsWith('/start ') && textInput.split(' ').length > 1) {
+    // ইউনিক কোড চেক করা (যেমন: /start BAAChg...)
+    if (textInput.startsWith('/start') && textInput.split(' ').length > 1) {
         const shortCode = textInput.split(' ')[1];
         const originalFileId = decodeFileId(shortCode);
 
-        if (originalFileId && originalFileId.startsWith('BAACAg')) {
-            const loadingMsg = await bot.sendMessage(chatId, "⏳ *আপনার ফাইলটি প্রসেস করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।*", { parse_mode: "Markdown" });
+        if (originalFileId && originalFileId.startsWith('BAAChg')) {
+            const loadingMsg = await bot.sendMessage(chatId, "⏳ আপনার ফাইলটি প্রসেস করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।");
             try {
                 await bot.sendVideo(chatId, originalFileId, {
-                    caption: `✨ *আপনার অনুরোধ করা ভিডিও ফাইলটি রেডি!*\n\n🌐 আমাদের ওয়েবসাইট: [${WEBSITE_NAME}](${WEBSITE_URL})`,
+                    caption: `✨ আপনার অনুরোধ করা ভিডিও ফাইলটি রেডি!\n\n🌐 আমাদের ওয়েবসাইট: [${WEBSITE_NAME}](${WEBSITE_URL})`,
                     parse_mode: "Markdown"
                 });
-                bot.deleteMessage(chatId, loadingMsg.message_id);
+                await bot.deleteMessage(chatId, loadingMsg.message_id);
             } catch (error) {
-                bot.sendMessage(chatId, "❌ *দুঃখিত! ফাইলটি টেলিগ্রাম সার্ভার থেকে মুছে ফেলা হয়েছে।*", { parse_mode: "Markdown" });
+                await bot.sendMessage(chatId, "❌ দুঃখিত! ফাইলটি টেলিগ্রাম সার্ভার থেকে খুঁজে পাওয়া যায়নি।");
             }
         } else {
-            bot.sendMessage(chatId, "⚠️ *দুঃখিত, এই লিংকটি সঠিক নয়।*", { parse_mode: "Markdown" });
+            await bot.sendMessage(chatId, "❌ দুঃখিত, এই লিংকটি সঠিক নয়।", { parse_mode: "Markdown" });
         }
     } 
-    // সাধারণ ভাবে /start লিখলে
+    // সাধারণ /start কমান্ড হ্যান্ডেল করা
     else if (textInput === '/start') {
-        bot.sendMessage(chatId, `👋 *হ্যালো, ${msg.from.first_name || 'ইউজার'}!*\n\n🚀 *${WEBSITE_NAME}* এর অফিশিয়াল বটের ভেতর আপনাকে স্বাগতম।\n\n📥 বটের মাধ্যমে সরাসরি মুভি ফাইল পেতে প্রথমে আমাদের ওয়েবসাইটে যান এবং আপনার পছন্দের মুভির লিংকে ক্লিক করুন।`, {
+        await bot.sendMessage(chatId, `👋 হ্যালো ${msg.from.first_name || 'ইউজার'}! [${WEBSITE_NAME}](${WEBSITE_URL}) এর অফিশিয়াল বটে আপনাকে স্বাগতম।`, {
             parse_mode: "Markdown",
             reply_markup: {
-                inline_keyboard: [[{ text: `🌐 Visit ${WEBSITE_NAME}`, url: WEBSITE_URL }]]
+                inline_keyboard: [[{ text: "🌐 Visit Website", url: WEBSITE_URL }]]
             }
         });
-    }
-    // ইউজার যদি /menu লেখে তবে ইনলাইন বাটন মেনু আসবে
+    } 
+    // মেনু কমান্ড হ্যান্ডেল করা
     else if (textInput === '/menu') {
-        bot.sendMessage(chatId, `🛠️ *MobileInsight বটের প্রধান মেনু* \n\nনিচের বাটনগুলো ব্যবহার করে আপনার প্রয়োজনীয় অপশনটি বেছে নিন:`, {
+        const cleanChannelMenu = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : '';
+        await bot.sendMessage(chatId, `📋 মেনু অপশনসমূহ:\n\nনিচের বাটনগুলো ব্যবহার করে আপনার প্রয়োজনীয় অপশনটি বেছে নিন।`, {
             parse_mode: "Markdown",
             reply_markup: {
                 inline_keyboard: [
-                    [
-                        { text: "🌐 আমাদের ওয়েবসাইট", url: WEBSITE_URL },
-                        { text: "📢 অফিশিয়াল চ্যানেল", url: `https://t.me{CHANNEL_ID.replace('@', '')}` }
-                    ]
+                    [{ text: "🌐 আমাদের ওয়েবসাইট", url: WEBSITE_URL }],
+                    [{ text: "📢 অফিশিয়াল চ্যানেল", url: `https://t.me{cleanChannelMenu}` }]
                 ]
             }
         });
     }
 });
 
-// ৭. সাইটের মেনু বাটন সেট করা
+// ৬. সাইটের মেনু বাটন সেট করা
 bot.setChatMenuButton({
     menu_button: JSON.stringify({
         type: 'web_app',
@@ -182,3 +181,7 @@ bot.setChatMenuButton({
 .catch((err) => {
     console.log("Menu Button Error: ", err);
 });
+
+// পোলিং এবং সাধারণ এরর হ্যান্ডলিং যোগ করা (যা ক্র্যাশ হওয়া আটকাবে)
+bot.on("polling_error", (err) => console.log("Polling error:", err.message));
+bot.on("error", (err) => console.log("General error:", err.message));
