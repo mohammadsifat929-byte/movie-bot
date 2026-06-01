@@ -23,7 +23,7 @@ const token = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID || 8695023288;
 const CHANNEL_ID = process.env.CHANNEL_ID || '@MobileInsight001';
 const WEBSITE_NAME = process.env.WEBSITE_NAME || 'ST FLIX.WEB';
-const WEBSITE_URL = process.env.WEBSITE_URL || 'https://blogspot.com';
+const WEBSITE_URL = process.env.WEBSITE_URL || 'https://stfix.blogspot.com/?m=1';
 
 // বট ইনিশিয়ালাইজ করা
 const bot = new TelegramBot(token, { polling: true });
