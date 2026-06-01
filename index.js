@@ -112,18 +112,31 @@ bot.on("message", async (msg) => {
     const userId = msg.from.id;
     const textInput = msg.text;
 
-        // চ্যানেল সাবস্ক্রিপশন চেক করা এবং জয়েন করার মেসেজ দেওয়া
+        // চ্যানেল     // চ্যানেল সাবস্ক্রিপশন চেক করা এবং জয়েন করার নোটিশ দেওয়া
     try {
         const isSubscribed = await checkSubscription(userId);
         
         if (!isSubscribed) {
             const cleanChannel = CHANNEL_ID ? CHANNEL_ID.replace('@', '') : 'MobileInsight001';
             
-            return await bot.sendMessage(chatId, `⚠️ **দুঃখিত! মুভিটি ডাউনলোড করার আগে আপনাকে আমাদের অফিশিয়াল চ্যানেলে জয়েন করতে হবে।**\n\nনিচের বাটনে ক্লিক করে চ্যানেলে জয়েন করুন এবং আবার ট্রাই করুন।`, {
+            return await bot.sendMessage(chatId, `⚠️ **অনুগ্রহ করে আগে আমাদের পাবলিক চ্যানেলে জয়েন হোন, তারপর বটের কাজ করতে পারবেন।**\n\nনিচের বাটনে চাপ দিয়ে চ্যানেলে জয়েন করে নিন।`, {
                 parse_mode: "Markdown",
                 reply_markup: {
                     inline_keyboard: [
                         [
+                            { 
+                                text: "📢 পাবলিক চ্যানেলে জয়েন করুন", 
+                                url: `https://t.me{cleanChannel}` 
+                            }
+                        ]
+                    ]
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Subscription Check Error:", error.message);
+    }
+
                             { 
                                 text: "📢 Join Our Channel", 
                                 url: `https://t.me{cleanChannel}` 
