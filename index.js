@@ -1,4 +1,5 @@
-const Tconst TelegramBot = require('node-telegram-bot-api');
+const TelegramBot = require('node-telegram-bot-api');
+
 const express = require('express');
 
 // ১. এক্সপ্রেস (Express) সার্ভার সেটআপ (Render Port Timeout Fix)
