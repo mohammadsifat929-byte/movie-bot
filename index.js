@@ -1,4 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']); // এই দুটি লাইন যুক্ত করুন
+
 const express = require('express');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
