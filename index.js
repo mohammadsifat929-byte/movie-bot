@@ -18,7 +18,8 @@ const WEBSITE_NAME = process.env.WEBSITE_NAME || 'ST FLIX WEB';
 const WEBSITE_URL = process.env.WEBSITE_URL || 'https://blogspot.com';
 
 // ৩. মঙ্গোডিবি ডাটাবেজ কানেকশন ও স্কিমা সেটআপ
-mongoose.connect(mongoURI)
+mongoose.connect(mongoURI) // 'm' ছোট হাতের এবং 'URI' বড় হাতের হবে, যা ১৪ নম্বর লাইনের সাথে মিলবে।
+
     .then(() => console.log("MongoDB Connected Successfully!"))
     .catch((err) => console.error("MongoDB Connection Error: ", err));
 
