@@ -68,7 +68,7 @@ async function handleIdentifile(msg, fileId, fileType) {
 
     } catch (error) {
         console.error("Database Save Error:", error.message);
-        await bot.sendMessage(msg.chat.id, "❌ সুপাবেসে লিঙ্ক তৈরি করতে সমস্যা হয়েছে!");
+        await bot.sendMessage(msg.chat.id, "❌ দুঃখিত লিঙ্ক তৈরি করতে সমস্যা হয়েছে!");
     }
 }
 
