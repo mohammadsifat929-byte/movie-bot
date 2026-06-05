@@ -7,15 +7,23 @@ const PORT = process.env.PORT || 3000;
 // এনভায়রনমেন্ট ভেরিয়েবল
 const token = process.env.BOT_TOKEN;
 const STORAGE_CHANNEL_ID = process.env.STORAGE_CHANNEL_ID;
-const ADMIN_ID = '8695023288';
 const MAIN_CHANNEL = '@mobileinsight001';
 const WEBSITE_LINK = 'https://stfix.blogspot.com/';
 const CHANNEL_LINK = 'https://t.me/mobileinsight001';
 
+// ✅ তিনজন অ্যাডমিন আইডি
+const ADMIN_IDS = ['7640562333', '8202892599', '8695023288'];
+
+// অ্যাডমিন চেক ফাংশন
+function isAdmin(userId) {
+    return ADMIN_IDS.includes(String(userId));
+}
+
 console.log('=================================');
 console.log('🤖 Mobile Insight Bot Starting...');
 console.log(`📁 STORAGE_CHANNEL_ID: ${STORAGE_CHANNEL_ID}`);
-console.log(`👑 ADMIN_ID: ${ADMIN_ID}`);
+console.log(`👑 অ্যাডমিন লিস্ট:`);
+ADMIN_IDS.forEach(id => console.log(`   - ${id}`));
 console.log('=================================');
 
 const bot = new TelegramBot(token, { polling: true });
@@ -32,12 +40,15 @@ app.listen(PORT, () => {
 bot.getMe().then((me) => {
     BOT_USERNAME = me.username;
     console.log(`✅ Bot: @${BOT_USERNAME}`);
-    bot.sendMessage(ADMIN_ID, `✅ বট অনলাইন হয়েছে!`).catch(() => {});
+    // সব অ্যাডমিনকে নোটিফিকেশন পাঠান
+    ADMIN_IDS.forEach(adminId => {
+        bot.sendMessage(adminId, `✅ বট অনলাইন হয়েছে!`).catch(() => {});
+    });
 }).catch(err => console.error('GetMe error:', err.message));
 
 // সাবস্ক্রিপশন চেক
 async function checkSubscription(userId) {
-    if (String(userId) === String(ADMIN_ID)) return true;
+    if (isAdmin(userId)) return true;
     try {
         const member = await bot.getChatMember(MAIN_CHANNEL, userId);
         return ['creator', 'administrator', 'member'].includes(member.status);
@@ -61,9 +72,9 @@ bot.onText(/\/help/, async (msg) => {
     );
 });
 
-// 📊 স্ট্যাটাস কমান্ড (শুধু অ্যাডমিন)
+// 📊 স্ট্যাটাস কমান্ড (শুধু অ্যাডমিনরা দেখতে পারবে)
 bot.onText(/\/stats/, async (msg) => {
-    if (String(msg.from.id) !== String(ADMIN_ID)) return;
+    if (!isAdmin(msg.from.id)) return;
     
     const uptime = process.uptime();
     const hours = Math.floor(uptime / 3600);
@@ -74,6 +85,7 @@ bot.onText(/\/stats/, async (msg) => {
         `📊 *বট স্ট্যাটাস*\n\n` +
         `⏰ চলমান: ${hours}ঘ ${minutes}মি ${seconds}সে\n` +
         `📁 স্টোরেজ চ্যানেল: ${STORAGE_CHANNEL_ID ? '✅ সেট' : '❌ সেট নেই'}\n` +
+        `👑 অ্যাডমিন সংখ্যা: ${ADMIN_IDS.length} জন\n` +
         `🔄 মোড: পোলিং\n` +
         `✅ স্ট্যাটাস: লাইভ\n\n` +
         `🔗 বটের ইউজারনাম: @${BOT_USERNAME}`,
@@ -105,7 +117,7 @@ bot.on('message', async (msg) => {
     }
 });
 
-// 🔥 ফাইল আপলোড হ্যান্ডলার
+// 🔥 ফাইল আপলোড হ্যান্ডলার (শুধু অ্যাডমিনরা)
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
@@ -113,9 +125,9 @@ bot.on('message', async (msg) => {
     
     if (text && text.startsWith('/')) return;
     
-    if (String(userId) === String(ADMIN_ID)) {
+    if (isAdmin(userId)) {
         if (msg.photo || msg.video || msg.document) {
-            console.log(`📁 File received, saving to storage...`);
+            console.log(`📁 ফাইল পেয়েছি: ${userId}`);
             
             // ফাইল ইনফো
             let fileName = 'ফাইল';
@@ -146,7 +158,7 @@ bot.on('message', async (msg) => {
                         `📝 কোড: \`${code}\``,
                         { parse_mode: 'Markdown' }
                     );
-                    console.log(`✅ LINK CREATED: ${link}`);
+                    console.log(`✅ লিংক তৈরি: ${link}`);
                 }
             } catch (err) {
                 console.error(`❌ Error: ${err.message}`);
@@ -156,7 +168,7 @@ bot.on('message', async (msg) => {
     }
 });
 
-// शॉर्ट লিংক হ্যান্ডলার
+// শর্ট লিংক হ্যান্ডলার
 bot.onText(/\/start (.+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
@@ -168,7 +180,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     
     const isSubscribed = await checkSubscription(userId);
     
-    if (!isSubscribed && String(userId) !== String(ADMIN_ID)) {
+    if (!isSubscribed && !isAdmin(userId)) {
         return bot.sendMessage(chatId, 
             `❌ *চ্যানেলে জয়েন করুন*\n\nকন্টেন্ট পেতে জয়েন করুন:\n${CHANNEL_LINK}`,
             {
@@ -183,7 +195,7 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
     try {
         await bot.sendMessage(chatId, "⏳ ফাইল পাঠানো হচ্ছে...");
         await bot.copyMessage(chatId, STORAGE_CHANNEL_ID, parseInt(code));
-        console.log(`✅ File sent: ${code}`);
+        console.log(`✅ ফাইল পাঠানো: ${code}`);
     } catch (err) {
         await bot.sendMessage(chatId, "❌ ফাইল পাওয়া যায়নি!");
     }
@@ -197,7 +209,7 @@ bot.onText(/\/start$/, async (msg) => {
     
     const isSubscribed = await checkSubscription(userId);
     
-    if (!isSubscribed && String(userId) !== String(ADMIN_ID)) {
+    if (!isSubscribed && !isAdmin(userId)) {
         await bot.sendMessage(chatId, 
             `❌ *স্বাগতম ${firstName}!*\n\nবট ব্যবহার করতে চ্যানেলে জয়েন করুন:\n${CHANNEL_LINK}`,
             {
@@ -221,4 +233,4 @@ bot.on('polling_error', (error) => {
     console.error('Polling error:', error.message);
 });
 
-console.log('🚀 Bot started with new features!');
+console.log('🚀 বট চালু হয়েছে!');
