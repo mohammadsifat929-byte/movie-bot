@@ -54,8 +54,9 @@ bot.on('message', async (msg) => {
                 // টেলিগ্রামের মেসেজ আইডিটিই আমাদের শর্ট কোড হিসেবে কাজ করবে
                 const shortCode = forwardedMsg.message_id;
                 
-                // শর্ট লিংক তৈরি করা (যা দেখতে এমন হবে: https://t.me)
-                const finalLink = 'https://t.me' + shortCode;
+               // শর্ট লিংকের তৈরি করা (যা দেখতে এমন হবে: https://t.me)
+const finalLink = 'https://t.me' + shortCode;
+               const finalLink = `https://t.me{shortCode}`;
                 const responseText = `✅ **আপনার ফাইলের শর্ট লিংক তৈরি হয়ে গেছে (No Database!):**\n\n🔗 ${finalLink}`;
 
                 await bot.sendMessage(chatId, responseText, { parse_mode: 'Markdown' });
