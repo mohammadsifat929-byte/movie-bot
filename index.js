@@ -55,7 +55,7 @@ bot.on('message', async (msg) => {
                 const shortCode = forwardedMsg.message_id;
                 
                 // শর্ট লিংক তৈরি করা (যা দেখতে এমন হবে: https://t.me)
-                const finalLink = `https://t.me{botUsername}?start=${shortCode}`;
+                const finalLink = 'https://t.me' + shortCode;
                 const responseText = `✅ **আপনার ফাইলের শর্ট লিংক তৈরি হয়ে গেছে (No Database!):**\n\n🔗 ${finalLink}`;
 
                 await bot.sendMessage(chatId, responseText, { parse_mode: 'Markdown' });
