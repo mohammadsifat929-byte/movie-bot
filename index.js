@@ -17,79 +17,80 @@ const MAIN_CHANNEL = '@mobileinsight001';
 const bot = new TelegramBot(token, { polling: true });
 let BOT_USERNAME = null;
 
-// 📝 সব মেসেজ এখানে কাস্টমাইজ করুন
-const MESSAGES = {
-    // ফোর্স সাবস্ক্রাইব মেসেজ (সব ক্ষেত্রেই এই মেসেজ দেখাবে)
-    forceSubscribe: (channelLink, botUsername, userId) => `❌ **অ্যাক্সেস অস্বীকৃত!** ❌
-
-হ্যালো! এই বট ব্যবহার করতে হলে আপনাকে আমাদের **অফিসিয়াল চ্যানেলে** জয়েন করতে হবে।
-
-🔴 **আপনি এখনও জয়েন করেননি!**
-
-📢 **চ্যানেল লিংক:** ${channelLink}
-
-👇 **নিচের বাটনে ক্লিক করে জয়েন করুন** 👇
-
-জয়েন করার পর আবার **/start** কমান্ড দিন।`,
-
-    // জয়েন করার পর স্বাগতম
-    welcome: (firstName, botUsername) => `✅ **স্বাগতম** ${firstName}! ✅
-
-আপনি এখন আমাদের চ্যানেলে জয়েন করেছেন।
-
-🎬 এখন আপনি আমাদের সব কন্টেন্ট পেতে পারবেন।
-
-📌 **লিংক ফরম্যাট:** 
-\`https://t.me/${botUsername}?start=কোড\`
-
-🔗 **ভিজিট ওয়েবসাইট:** [ST Flix Web](https://stflix.com)`,
-
-    // ফাইল প্রসেসিং মেসেজ
-    processing: `⏳ **ফাইল প্রসেস করা হচ্ছে...**`,
-    
-    // ফাইল নট ফাউন্ড
-    fileNotFound: `❌ ফাইল পাওয়া যায়নি!`,
-    
-    // অ্যাডমিন লিংক জেনারেশন
-    linkGenerated: (link, shortCode, botUsername) => `✅ লিংক তৈরি: ${link}\n📝 কোড: ${shortCode}`,
-    
-    // বট তথ্য
-    botInfo: (botUsername, channel) => `🤖 বট: @${botUsername}\n📢 চ্যানেল: ${channel}`
-};
-
 // বট নিজের ইউজারনাম বের করে নিচ্ছে
 bot.getMe().then((me) => {
     BOT_USERNAME = me.username;
     console.log(`🤖 বটের ইউজারনাম: @${BOT_USERNAME}`);
 });
 
-// সাবস্ক্রিপশন চেক ফাংশন
+// 🎯 রিয়েল টাইম সাবস্ক্রিপশন চেক
 async function checkSubscription(userId) {
     if (String(userId) === String(ADMIN_ID)) return true;
     try {
         const member = await bot.getChatMember(MAIN_CHANNEL, userId);
-        const status = member.status;
-        return ['creator', 'administrator', 'member'].includes(status);
+        return ['creator', 'administrator', 'member'].includes(member.status);
     } catch (error) {
-        console.log(`Subscription check failed for ${userId}:`, error.message);
         return false;
     }
 }
 
-// 🔥 সব মেসেজের আগে চেক করার ফাংশন (Middleware)
-async function checkAndReply(chatId, userId, callback) {
+// 🎯 লিংক ফরম্যাট দেখানোর ফাংশন (সব ইউজারের জন্য)
+async function showLinkFormat(chatId) {
+    const demoCode = Math.floor(Math.random() * 90000) + 10000; // র্যান্ডম ডেমো কোড
+    const demoLink = `https://t.me/${BOT_USERNAME}?start=${demoCode}`;
+    
+    const formatText = `📌 **লিংক ফরম্যাট বুঝে নিন:** 
+
+🔗 **লিংক দেখতে এরকম হবে:**
+\`${demoLink}\`
+
+📝 **উদাহরণস্বরূপ:**
+\`https://t.me/${BOT_USERNAME}?start=123456\`
+
+⚠️ **মনে রাখবেন:**
+• \`123456\` এর জায়গায় আসলে ভিন্ন নম্বর থাকবে
+• প্রতিটি ফাইলের জন্য আলাদা নম্বর থাকে
+• এই নম্বরটিই আপনার শর্ট লিংক
+
+💡 **লিংক কিভাবে পাবেন:**
+✅ অ্যাডমিন ফাইল দিলেই লিংক পাবেন
+✅ অথবা ওয়েবসাইট থেকে লিংক সংগ্রহ করুন
+✅ আমাদের চ্যানেলে লিংক দেওয়া থাকে
+
+🔗 **ওয়েবসাইট:** [ST Flix Web](https://stflix.com)`;
+    
+    await bot.sendMessage(chatId, formatText, { 
+        parse_mode: 'Markdown',
+        disable_web_page_preview: false
+    });
+}
+
+// 🎯 মেইন হ্যান্ডলার
+async function handleWithSubscriptionCheck(msg, callback) {
+    const chatId = msg.chat.id;
+    const userId = msg.from.id;
+    
     const isSubscribed = await checkSubscription(userId);
     
     if (!isSubscribed && String(userId) !== String(ADMIN_ID)) {
         const channelLink = `https://t.me/${MAIN_CHANNEL.replace('@', '')}`;
-        const subscribeMsg = MESSAGES.forceSubscribe(channelLink, BOT_USERNAME, userId);
         
-        await bot.sendMessage(chatId, subscribeMsg, {
+        const notSubMsg = `❌ **অ্যাক্সেস অস্বীকৃত!** ❌
+
+আমাদের বট ব্যবহার করতে হলে আপনাকে চ্যানেলে জয়েন করতে হবে।
+
+📢 **চ্যানেল লিংক:** ${channelLink}
+
+👇 নিচের বাটনে ক্লিক করে জয়েন করুন 👇
+
+জয়েন করার পর **/start** দিন।`;
+        
+        await bot.sendMessage(chatId, notSubMsg, {
             parse_mode: 'Markdown',
             reply_markup: {
                 inline_keyboard: [
                     [{ text: '📢 চ্যানেলে জয়েন করুন', url: channelLink }],
-                    [{ text: '🔄 জয়েন করেছি', callback_data: 'check_join' }]
+                    [{ text: '✅ জয়েন করেছি', callback_data: 'recheck_join' }]
                 ]
             }
         });
@@ -99,119 +100,166 @@ async function checkAndReply(chatId, userId, callback) {
     return await callback();
 }
 
-// ✅ জয়েন চেক করার জন্য Callback
+// ✅ রিচেক করার জন্য Callback
 bot.on('callback_query', async (callbackQuery) => {
     const action = callbackQuery.data;
     const chatId = callbackQuery.message.chat.id;
     const userId = callbackQuery.from.id;
     const messageId = callbackQuery.message.message_id;
+    const firstName = callbackQuery.from.first_name || 'ইউজার';
     
-    if (action === 'check_join') {
+    if (action === 'recheck_join') {
         const isSubscribed = await checkSubscription(userId);
         
         if (isSubscribed) {
             await bot.answerCallbackQuery(callbackQuery.id, { 
-                text: "✅ ধন্যবাদ! এখন আপনি বট ব্যবহার করতে পারবেন!", 
+                text: "✅ আপনি এখন চ্যানেলে জয়েন আছেন!", 
                 show_alert: true 
             });
             await bot.deleteMessage(chatId, messageId).catch(() => {});
             
-            // ওয়েলকাম মেসেজ পাঠান
-            const welcomeMsg = MESSAGES.welcome(callbackQuery.from.first_name || 'ইউজার', BOT_USERNAME);
+            // ওয়েলকাম মেসেজ + লিংক ফরম্যাট দেখান
+            const welcomeMsg = `🎉 **স্বাগতম** ${firstName}! 🎉
+
+আপনি এখন আমাদের চ্যানেলে জয়েন করেছেন।
+
+✅ এখন আপনি আমাদের সব কন্টেন্ট পেতে পারবেন।`;
+            
             await bot.sendMessage(chatId, welcomeMsg, { parse_mode: 'Markdown' });
+            
+            // লিংক ফরম্যাট দেখান
+            await showLinkFormat(chatId);
+            
         } else {
             await bot.answerCallbackQuery(callbackQuery.id, { 
-                text: "❌ আপনি এখনও চ্যানেলে জয়েন করেননি! দয়া করে জয়েন করুন।", 
+                text: "❌ আপনি এখনও জয়েন করেননি!", 
                 show_alert: true 
             });
         }
     }
 });
 
-// 🎯 ১. যখন কেউ সার্চ করে বট পাবে এবং /start দিবে
+// 🎯 ১. /start কমান্ড
 bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
+    const firstName = msg.from.first_name || 'ইউজার';
     
-    // লিংক সহ /start হলে (শর্ট কোড আছে)
     const match = msg.text.match(/\/start (.+)/);
     const shortCode = match ? match[1] : null;
     
-    await checkAndReply(chatId, userId, async () => {
+    await handleWithSubscriptionCheck(msg, async () => {
         if (shortCode && !isNaN(shortCode)) {
             // শর্ট লিংক থেকে ফাইল পাঠান
             try {
-                const loadingMsg = await bot.sendMessage(chatId, MESSAGES.processing);
+                const loadingMsg = await bot.sendMessage(chatId, '⏳ ফাইল প্রসেস করা হচ্ছে...');
                 await bot.copyMessage(chatId, STORAGE_CHANNEL_ID, parseInt(shortCode));
                 await bot.deleteMessage(chatId, loadingMsg.message_id).catch(() => {});
+                console.log(`✅ ফাইল পাঠানো হয়েছে: ${shortCode} -> ${userId}`);
             } catch (err) {
-                await bot.sendMessage(chatId, MESSAGES.fileNotFound);
+                console.error('File error:', err.message);
+                await bot.sendMessage(chatId, "❌ ফাইল পাওয়া যায়নি!");
             }
         } else {
-            // সাধারণ /start
-            const welcomeMsg = MESSAGES.welcome(msg.from.first_name || 'ইউজার', BOT_USERNAME);
+            // সাধারণ /start - ওয়েলকাম + লিংক ফরম্যাট দেখান
+            const welcomeMsg = `👋 **হ্যালো** ${firstName}! 👋
+
+🎬 **ST Flix Web** বটে স্বাগতম!
+
+আমি একটি ফাইল শেয়ারিং বট।`;
+            
             await bot.sendMessage(chatId, welcomeMsg, { parse_mode: 'Markdown' });
+            
+            // লিংক ফরম্যাট দেখান
+            await showLinkFormat(chatId);
         }
         return true;
     });
 });
 
-// 🎯 ২. যখন কেউ সরাসরি বটে টাইপ করে মেসেজ দেয় (সার্চ করে পেয়ে)
+// 🎯 ২. ফাইল আপলোড (শুধু অ্যাডমিন)
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     const text = msg.text;
     
-    // কমান্ড ইতিমধ্যে হ্যান্ডেল করা হয়েছে
-    if (text && text.startsWith('/start')) return;
-    if (text && text.startsWith('/info')) return;
+    if (text && (text.startsWith('/start') || text.startsWith('/info') || text.startsWith('/linkformat'))) return;
     
-    await checkAndReply(chatId, userId, async () => {
-        // চেক করা যে এটা ফাইল কিনা (অ্যাডমিনের জন্য)
-        if (String(userId) === String(ADMIN_ID) && (msg.photo || msg.video || msg.document)) {
-            try {
-                const forwardedMsg = await bot.forwardMessage(STORAGE_CHANNEL_ID, chatId, msg.message_id);
-                if (forwardedMsg && forwardedMsg.message_id) {
-                    const shortCode = forwardedMsg.message_id;
-                    const finalLink = `https://t.me/${BOT_USERNAME}?start=${shortCode}`;
-                    await bot.sendMessage(chatId, MESSAGES.linkGenerated(finalLink, shortCode, BOT_USERNAME), { parse_mode: 'Markdown' });
-                }
-            } catch (err) {
-                await bot.sendMessage(chatId, `❌ লিংক তৈরি ব্যর্থ: ${err.message}`);
+    // অ্যাডমিনের ফাইল হ্যান্ডেল করা
+    if (String(userId) === String(ADMIN_ID) && (msg.photo || msg.video || msg.document)) {
+        try {
+            const forwardedMsg = await bot.forwardMessage(STORAGE_CHANNEL_ID, chatId, msg.message_id);
+            if (forwardedMsg && forwardedMsg.message_id) {
+                const shortCode = forwardedMsg.message_id;
+                const finalLink = `https://t.me/${BOT_USERNAME}?start=${shortCode}`;
+                
+                const linkMsg = `✅ **ফাইল সেভ হয়েছে!** ✅
+
+🔗 **আপনার ফাইলের লিংক:**
+${finalLink}
+
+📝 **শর্ট কোড:** \`${shortCode}\`
+
+⚡ **লিংক টেস্ট করুন:**
+\`https://t.me/${BOT_USERNAME}?start=${shortCode}\`
+
+💾 এই লিংকটি সেভ করে রাখুন।`;
+                
+                await bot.sendMessage(chatId, linkMsg, { 
+                    parse_mode: 'Markdown',
+                    disable_web_page_preview: false
+                });
+                console.log(`✅ লিংক তৈরি: ${finalLink}`);
             }
-        } else if (text && !text.startsWith('/')) {
-            // সাধারণ টেক্সট মেসেজের জবাব
-            await bot.sendMessage(chatId, `👋 হ্যালো! এই বট ব্যবহার করতে শর্ট লিংক দিন অথবা /start দিন।`);
+        } catch (err) {
+            console.error('Forward error:', err.message);
+            await bot.sendMessage(chatId, `❌ লিংক তৈরি ব্যর্থ: ${err.message}`);
         }
-        return true;
-    });
-});
-
-// 🎯 ৩. /info কমান্ড
-bot.onText(/\/info/, async (msg) => {
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
+        return;
+    }
     
-    await checkAndReply(chatId, userId, async () => {
-        await bot.sendMessage(chatId, MESSAGES.botInfo(BOT_USERNAME, MAIN_CHANNEL), { parse_mode: 'Markdown' });
-        return true;
-    });
-});
+    // সাধারণ ইউজারের মেসেজের জন্য চেক
+    if (String(userId) !== String(ADMIN_ID)) {
+        await handleWithSubscriptionCheck(msg, async () => {
+            if (text && !text.startsWith('/')) {
+                await bot.sendMessage(chatId, `ℹ️ ভিডিও/ফাইল পেতে শর্ট লিংক ব্যবহার করুন।
 
-// 🎯 ৪. অন্য যেকোনো কিছু (যেমন স্টিকার, ভয়েস ইত্যাদি)
-bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
-    
-    // আগের হ্যান্ডলারগুলোতে যা প্রসেস হয়নি
-    if (msg.sticker || msg.voice || msg.video_note) {
-        await checkAndReply(chatId, userId, async () => {
-            await bot.sendMessage(chatId, `ℹ️ এই বট শুধু ভিডিও, ডকুমেন্ট এবং ফটো সাপোর্ট করে।`);
+📌 লিংক ফরম্যাট জানতে /linkformat দিন অথবা /start দিন।`);
+            }
             return true;
         });
     }
 });
 
+// 🎯 ৩. লিংক ফরম্যাট দেখানোর জন্য আলাদা কমান্ড
+bot.onText(/\/linkformat/, async (msg) => {
+    const chatId = msg.chat.id;
+    
+    await handleWithSubscriptionCheck(msg, async () => {
+        await showLinkFormat(chatId);
+        return true;
+    });
+});
+
+// 🎯 ৪. /info কমান্ড
+bot.onText(/\/info/, async (msg) => {
+    await handleWithSubscriptionCheck(msg, async () => {
+        const infoMsg = `🤖 **বট তথ্য**
+
+📛 ইউজারনাম: @${BOT_USERNAME}
+📢 চ্যানেল: ${MAIN_CHANNEL}
+
+📌 **লিংক ফরম্যাট দেখতে:** /linkformat
+
+🔗 **ওয়েবসাইট:** [ST Flix Web](https://stflix.com)`;
+        
+        await bot.sendMessage(msg.chat.id, infoMsg, { 
+            parse_mode: 'Markdown' 
+        });
+        return true;
+    });
+});
+
 console.log('🚀 বট চালু হয়েছে!');
-console.log(`📢 ফোর্স সাবস্ক্রাইব চ্যানেল: ${MAIN_CHANNEL}`);
-console.log(`✅ বট এখন সব ইন্টারঅ্যাকশনের আগে চেক করবে ইউজার চ্যানেলে জয়েন করেছে কিনা!`);
+console.log(`📢 মেইন চ্যানেল: ${MAIN_CHANNEL}`);
+console.log(`✅ ইউজাররা /linkformat দিয়ে লিংক ফরম্যাট দেখতে পাবে`);
